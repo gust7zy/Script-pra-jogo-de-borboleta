@@ -50,9 +50,7 @@ local nectarBar = mainGui.tr_header.labels.nectar.bar
 
 local function useTool()
 			if AutoFarmIsActivated then
-                if not teleported then
 				    game.ReplicatedStorage.remotes.toolUse:InvokeServer()
-        end
 	end
 end
 
@@ -75,7 +73,6 @@ local function convertNectar()
 if AutoFarmIsActivated then
 	if nectarBar.Size.X.Scale >= 1.0 then
         bagIsFull = true
-            if not teleported then
 		    findNest()
             teleported = true
 			wait(.5)
@@ -83,7 +80,6 @@ if AutoFarmIsActivated then
                     if nectarBar.Size.X.Scale == 0 then
                         bagIsFull = false
                             teleported = false
-                end
             end
 		end
 	end
@@ -94,10 +90,8 @@ local function detectIfBagIsEmpty()
 if AutoFarmIsActivated then
     if nectarBar.Size.X.Scale == 0 then
         if teleported then
-            if bagIsFull then
                 teleported = false
                   bagIsFull = false
-                end
             end
         end
     end
@@ -107,15 +101,13 @@ end
 
 local function getTokens()
 		if AutoFarmIsActivated then
-            if not bagIsFull then
-                if not teleported then
 			          for i, v in pairs(game.workspace.abilities.tokens:GetDescendants()) do
                             if v.Name == "token" then
                                  token = v
                                     local hitbox = token:FindFirstChild("hitbox")
-                                         char.HumanoidRootPart.CFrame = CFrame.new(hitbox.Position) + Vector3.new(0, 0, 0)
-                                            wait(.1)
-                    end
+										if hitbox then
+								        	char.HumanoidRootPart.CFrame = CFrame.new(hitbox.Position) + Vector3.new(0, 0, 0)
+                                            	wait(.1)
                  end
              end
 		end
@@ -126,8 +118,6 @@ end
 
 local function teleportToField()
 if AutoFarmIsActivated then
-    if not bagIsFull then
-        if not teleported then
              local spaceIndex = string.find(selectedField, " ")
                     if spaceIndex then
                          local selectedFieldCleanName = string.gsub(selectedField, " ", "")
@@ -139,8 +129,6 @@ if AutoFarmIsActivated then
                                              fieldToFarm = v
                                                   local fieldPos = fieldToFarm.Position
                                                     char.HumanoidRootPart.CFrame = CFrame.new(fieldPos) + Vector3.new(0, -163, 0)
-						end
-                    end
                 end
             end
         end
@@ -230,11 +218,15 @@ AutoFarmTab:AddToggle({
 		AutoFarmIsActivated = Value
 			while wait(.1) do
                 if AutoFarmIsActivated then
-				    useTool()
-				    getTokens()
-					teleportToField()
-                    convertNectar()
-                    detectIfBagIsEmpty()
+					if not bagIsFull then
+						useTool()
+						detectIfBagIsEmpty()
+					end
+						if not teleported then
+				    	getTokens()
+						teleportToField()
+                    	convertNectar()
+					end
                 else break
             end
 		end
@@ -244,7 +236,7 @@ AutoFarmTab:AddToggle({
 AutoFarmTab:AddDropdown({
 	Name = "Field",
 	Default = "Bell Flower",
-	Options = {"Bell Flower", "Blue Flower"},
+	Options = {"Bell Flower", "Blue Flower", "Blueberry", "Carrot 1", "Carrot 2", "Clover", "Cool Coconut", "Eggplant", "Hazelnut", "Mushroom", "Neutral Coconut", "Onion", "Pinecone", "Rose", "Rose Mondial", "Ruby", "Rye 1", "Rye 2", "Wildberry"},
 	Callback = function(Value)
 		selectedField = Value
 	end    
@@ -299,7 +291,7 @@ TeleportTab:AddButton({
 
 
 local Section = TeleportTab:AddSection({
-	Name = "Shops"
+	Name = "Lojas"
 })
 
 
@@ -307,7 +299,7 @@ local Section = TeleportTab:AddSection({
 
 
 TeleportTab:AddButton({
-	Name = "Cool Shop",
+	Name = "Loja com nome estranho",
 	Callback = function()
         char.HumanoidRootPart.CFrame = CFrame.new(shop.cool_shop.Position) + Vector3.new(0, 1, 0)
   	end    
@@ -319,9 +311,9 @@ local Section = TeleportTab:AddSection({
 })
 
 TeleportTab:AddButton({
-	Name = "Bell Flower",
+	Name = "Blueberry",
 	Callback = function()
-        char.HumanoidRootPart.CFrame = CFrame.new(fields.bellflower["0:0"].Position) + Vector3.new(0, 1, 0)
+        char.HumanoidRootPart.CFrame = CFrame.new(fields.blueberry["0:0"].Position) + Vector3.new(0, 1, 0)
   	end    
 })
 
