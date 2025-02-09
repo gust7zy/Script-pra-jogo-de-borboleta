@@ -1,0 +1,496 @@
+local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/jensonhirst/Orion/main/source')))()
+
+
+
+--VARIABLES
+
+
+local fieldToFarm
+local selectedField
+local token
+
+
+
+--BOOLS
+
+
+
+local AutoFarmIsActivated
+local bagIsFull = false
+local teleported = false
+
+
+
+
+--PLAYER
+
+
+
+local plr = game.Players.LocalPlayer
+local char = plr.Character
+
+
+
+--FOLDERS
+
+
+
+local replicatedStorage = game.ReplicatedStorage
+local fields = game.workspace.fields
+local shop = game.workspace.shops
+local plrGuis = plr.PlayerGui
+local mainGui = plrGuis.main
+local nectarBar = mainGui.tr_header.labels.nectar.bar
+
+
+
+--FUNCTIONS SECTION
+
+
+
+local function useTool()
+			if AutoFarmIsActivated then
+                if not teleported then
+				    game.ReplicatedStorage.remotes.toolUse:InvokeServer()
+        end
+	end
+end
+
+
+
+local function findNest()
+local nests = game.workspace.nests:GetChildren()
+if bagIsFull then
+	for i, v in pairs(nests) do
+		if v.Name == char.Name then
+			char.HumanoidRootPart.CFrame = CFrame.new(v.pad.center.Position) + Vector3.new(0, 1.5, 0)
+            end
+		end
+	end
+end    
+
+
+
+local function convertNectar()
+if AutoFarmIsActivated then
+	if nectarBar.Size.X.Scale >= 1.0 then
+        bagIsFull = true
+            if not teleported then
+		    findNest()
+            teleported = true
+			wait(.5)
+				replicatedStorage.remotes.convert:FireServer()
+                    if nectarBar.Size.X.Scale == 0 then
+                        bagIsFull = false
+                            teleported = false
+                                print("working")
+                end
+            end
+		end
+	end
+end
+
+
+local function detectIfBagIsEmpty()
+if AutoFarmIsActivated then
+    if nectarBar.Size.X.Scale == 0 then
+        if teleported then
+            if bagIsFull then
+                teleported = false
+                  bagIsFull = false
+                end
+            end
+        end
+    end
+end
+
+
+
+local function getTokens()
+		if AutoFarmIsActivated then
+            if not bagIsFull then
+                if not teleported then
+			          for i, v in pairs(game.workspace.abilities.tokens:GetDescendants()) do
+                            if v.Name == "token" then
+                                 token = v
+                                    local hitbox = token:FindFirstChild("hitbox")
+                                         char.HumanoidRootPart.CFrame = CFrame.new(hitbox.Position) + Vector3.new(0, 0, 0)
+                                            wait(.1)
+                    end
+                 end
+             end
+		end
+	end
+end
+
+
+
+local function teleportToField()
+if AutoFarmIsActivated then
+    if not bagIsFull then
+        if not teleported then
+             local spaceIndex = string.find(selectedField, " ")
+                    if spaceIndex then
+                         local selectedFieldCleanName = string.gsub(selectedField, " ", "")
+                            local selectedFieldName = string.lower(selectedFieldCleanName)
+                                for i, v in pairs(fields:GetChildren()) do
+                                     local fieldCleanName = string.gsub(v.Name, "[: _%d]", "")
+                                      local fieldName = string.lower(fieldCleanName)
+                                         if fieldName == selectedFieldName then
+                                             fieldToFarm = v
+                                                  local fieldPos = fieldToFarm.Position
+                                                    char.HumanoidRootPart.CFrame = CFrame.new(fieldPos) + Vector3.new(0, -163, 0)
+                        end
+                    end
+                end
+            end
+        end
+    end
+end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+local Window = OrionLib:MakeWindow({Name = "Project Butterfly [Teste]", HidePremium = true, SaveConfig = false, ConfigFolder = "OrionTest"})
+
+
+
+
+
+
+
+
+
+
+
+
+
+--PLAYER TAB
+
+
+
+local PlayerTab = Window:MakeTab({
+	Name = "Player",
+	Icon = "rbxassetid://4483345998",
+	PremiumOnly = false
+})
+
+
+
+
+PlayerTab:AddSlider({
+	Name = "Speed",
+	Min = 1,
+	Max = 50,
+	Default = 1,
+	Color = Color3.fromRGB(255,255,255),
+	Increment = 0.1,
+	ValueName = "Speed",
+	Callback = function(Value)
+		char.realism.speedBoost.Value = Value
+	end    
+})
+
+
+
+
+
+
+
+
+
+
+--AUTOFARM TAB
+
+
+
+local AutoFarmTab = Window:MakeTab({
+	Name = "Auto Farm",
+	Icon = "rbxassetid://4483345998",
+	PremiumOnly = false
+})
+
+
+
+AutoFarmTab:AddToggle({
+	Name = "Auto Farm",
+	Default = false,
+	Callback = function(Value)
+		AutoFarmIsActivated = Value
+			while wait(.1) do
+                if AutoFarmIsActivated then
+				    useTool()
+				    getTokens()
+					teleportToField()
+                    convertNectar()
+                    detectIfBagIsEmpty()
+                else break
+            end
+		end
+	end    
+})
+
+AutoFarmTab:AddDropdown({
+	Name = "Field",
+	Default = "Bell Flower",
+	Options = {"Bell Flower", "Blue Flower"},
+	Callback = function(Value)
+		selectedField = Value
+	end    
+})
+
+AutoFarmTab:AddButton({
+	Name = "Teste1",
+	     teleportToField()
+	end
+})
+
+AutoFarmTab:AddButton({
+	Name = "Teste2",
+	Callback = function()
+        teste()
+	end
+})
+
+
+
+
+
+
+
+
+
+
+--TELEPORT TAB
+
+
+
+local TeleportTab = Window:MakeTab({
+	Name = "Teleport",
+	Icon = "rbxassetid://4483345998",
+	PremiumOnly = false
+})
+
+
+
+local Section = TeleportTab:AddSection({
+	Name = "Nest"
+})
+
+
+
+
+
+TeleportTab:AddButton({
+	Name = "Nest",
+	Callback = function()
+    local nests = game.workspace.nests:GetChildren()
+    for i, v in pairs(nests) do
+		if v.Name == char.Name then
+			char.HumanoidRootPart.CFrame = CFrame.new(v.pad.center.Position) + Vector3.new(0, 1, 0)
+		    end
+	    end
+	end
+})
+
+
+
+
+
+
+
+
+local Section = TeleportTab:AddSection({
+	Name = "Shops"
+})
+
+
+
+
+
+TeleportTab:AddButton({
+	Name = "Cool Shop",
+	Callback = function()
+        char.HumanoidRootPart.CFrame = CFrame.new(shop.cool_shop.Position) + Vector3.new(0, 1, 0)
+  	end    
+})
+
+
+local Section = TeleportTab:AddSection({
+	Name = "Fields"
+})
+
+TeleportTab:AddButton({
+	Name = "Bell Flower",
+	Callback = function()
+        char.HumanoidRootPart.CFrame = CFrame.new(fields.bellflower["0:0"].Position) + Vector3.new(0, 1, 0)
+  	end    
+})
+
+TeleportTab:AddButton({
+	Name = "Blue Flower",
+	Callback = function()
+        char.HumanoidRootPart.CFrame = CFrame.new(fields.blue_flower["22:21"].Position) + Vector3.new(0, 1, 0)
+  	end    
+})
+
+TeleportTab:AddButton({
+	Name = "Bell Flower",
+	Callback = function()
+        char.HumanoidRootPart.CFrame = CFrame.new(fields.bellflower["0:0"].Position) + Vector3.new(0, 1, 0)
+  	end    
+})
+
+TeleportTab:AddButton({
+	Name = "Carrot 1",
+	Callback = function()
+        char.HumanoidRootPart.CFrame = CFrame.new(fields["carrot:1"]["0:0"].Position) + Vector3.new(0, 1, 0)
+  	end    
+})
+
+TeleportTab:AddButton({
+	Name = "Carrot 2",
+	Callback = function()
+        char.HumanoidRootPart.CFrame = CFrame.new(fields["carrot:2"]["0:0"].Position) + Vector3.new(0, 1, 0)
+  	end    
+})
+
+TeleportTab:AddButton({
+	Name = "Clover",
+	Callback = function()
+        char.HumanoidRootPart.CFrame = CFrame.new(fields.clover["0:0"].Position) + Vector3.new(0, 1, 0)
+  	end    
+})
+
+TeleportTab:AddButton({
+	Name = "Cool Coconut",
+	Callback = function()
+        char.HumanoidRootPart.CFrame = CFrame.new(fields.cool_coconut["0:0"].Position) + Vector3.new(0, 1, 0)
+  	end    
+})
+
+TeleportTab:AddButton({
+	Name = "Eggplant",
+	Callback = function()
+        char.HumanoidRootPart.CFrame = CFrame.new(fields.eggplant["0:0"].Position) + Vector3.new(0, 1, 0)
+  	end    
+})
+
+TeleportTab:AddButton({
+	Name = "Hazelnut",
+	Callback = function()
+        char.HumanoidRootPart.CFrame = CFrame.new(fields.hazelnut["0:0"].Position) + Vector3.new(0, 1, 0)
+  	end    
+})
+
+TeleportTab:AddButton({
+	Name = "Mushroom",
+	Callback = function()
+        char.HumanoidRootPart.CFrame = CFrame.new(fields.mushroom["0:0"].Position) + Vector3.new(0, 1, 0)
+  	end    
+})
+
+TeleportTab:AddButton({
+	Name = "Neutral Coconut",
+	Callback = function()
+        char.HumanoidRootPart.CFrame = CFrame.new(fields.neutral_coconut["0:0"].Position) + Vector3.new(0, 1, 0)
+  	end    
+})
+
+TeleportTab:AddButton({
+	Name = "Onion",
+	Callback = function()
+        char.HumanoidRootPart.CFrame = CFrame.new(fields.onion["0:0"].Position) + Vector3.new(0, 1, 0)
+  	end    
+})
+
+TeleportTab:AddButton({
+	Name = "Pinecone",
+	Callback = function()
+        char.HumanoidRootPart.CFrame = CFrame.new(fields.pinecone["0:0"].Position) + Vector3.new(0, 1, 0)
+  	end    
+})
+
+TeleportTab:AddButton({
+	Name = "Rose",
+	Callback = function()
+        char.HumanoidRootPart.CFrame = CFrame.new(fields.rose["0:0"].Position) + Vector3.new(0, 1, 0)
+  	end    
+})
+
+TeleportTab:AddButton({
+	Name = "Rose Mondial",
+	Callback = function()
+        char.HumanoidRootPart.CFrame = CFrame.new(fields.rose_mondial["0:0"].Position) + Vector3.new(0, 1, 0)
+  	end    
+})
+
+TeleportTab:AddButton({
+	Name = "Ruby",
+	Callback = function()
+        char.HumanoidRootPart.CFrame = CFrame.new(fields.ruby["0:0"].Position) + Vector3.new(0, 1, 0)
+  	end    
+})
+
+TeleportTab:AddButton({
+	Name = "Rye 1",
+	Callback = function()
+        char.HumanoidRootPart.CFrame = CFrame.new(fields["rye:1"]["0:0"].Position) + Vector3.new(0, 1, 0)
+  	end    
+})
+
+TeleportTab:AddButton({
+	Name = "Rye 2",
+	Callback = function()
+        char.HumanoidRootPart.CFrame = CFrame.new(fields["rye:2"]["0:0"].Position) + Vector3.new(0, 1, 0)
+  	end    
+})
+
+TeleportTab:AddButton({
+	Name = "Wild Berry",
+	Callback = function()
+        char.HumanoidRootPart.CFrame = CFrame.new(fields.wildberry["0:0"].Position) + Vector3.new(0, 1, 0)
+  	end    
+})
+
+
+
+
+
+
+
+
+local MiscTab = Window:MakeTab({
+	Name = "Misc",
+	Icon = "rbxassetid://4483345998",
+	PremiumOnly = false
+})
+
+
+
+
+
+MiscTab:AddButton({
+	Name = "Desbloquear áreas (Quando reentrar no jogo, precisa clicar no botão de novo)",
+	Callback = function()
+        for i , v in pairs(workspace:GetChildren()) do
+			if v.Name == "gates" then
+				v:Destroy()
+			elseif v.Name == "zones" then
+				v:Destroy()
+			end
+		end
+  	end    
+})
